@@ -11,39 +11,45 @@ function Search (bounds, fn) {
     this.fn = fn;
     this.errorMean = runningMean();
     this.slopes = [];
+    this.centers = [];
+    this.running = false;
 }
 
 Search.prototype.stop = function () {
+    this.running = false;
 };
 
 Search.prototype.start = function () {
     var self = this;
+    
     var fn = self.fn;
     var dims = self.bounds.length;
-    var init = [ undefined, undefined ];
+    var init = {};
     var pending = 2;
     
-    var initA = self.bounds[0][0];
-    fn(initA, function (x) {
-        init[0] = [ initA, x ];
-        self.emit('test', [ initA ], x);
+    self.running = true;
+    
+    init.a = self.bounds[0][0];
+    fn(init.a, function (x) {
+        init.fa = x;
+        self.emit('test', [ init.a ], x);
         ready();
     });
     
-    var initB = self.bounds[0][1];
-    fn(initB, function (x) {
-        self.emit('test', [ initB ], x);
-        init[1] = [ initB, x ];
+    init.b = self.bounds[0][1];
+    fn(init.b, function (x) {
+        self.emit('test', [ init.b ], x);
+        init.fb = x;
         ready();
     });
     
     function ready () {
-        if (--pending === 0) next(init);
+        if (--pending === 0) next(init.a, init.fa, init.b, init.fb);
     }
     
-    function next (bounds) {
-        var a = bounds[0][0], b = bounds[1][0];
-        var fa = bounds[0][1], fb = bounds[1][1];
+    function next (a, fa, b, fb) {
+        if (!self.running) return;
+        
         var center = (a + b) / 2;
         var centerMean = (fa + fb) / 2;
         
@@ -56,16 +62,21 @@ Search.prototype.start = function () {
             self.slopes.push(s0, s1);
             
             var thresh = (high - fa) / Math.abs(center - a);
-            var highEnough = self.slopes.filter(function (s) {
+            
+            var projected = self.slopes.map(function (s) {
+                return (a - center) * s + centerMean;
+            });
+            var highEnough = projected.filter(function (s) {
                 return s > thresh;
             });
             var portion = highEnough.length / self.slopes.length;
             var yield = mean(highEnough) / portion;
+console.log('yield=', yield);
             
-            console.log('yield=', yield);
+            self.centers.push({ center: center, yield: yield });
             
-            console.dir([ s0, s1 ]);
-            
+            var nextCenter = best(self.centers);
+            //next();
         });
     }
 };
@@ -74,4 +85,12 @@ function mean (xs) {
     var sum = 0;
     for (var i = 0; i < xs.length; i++) sum += xs[i];
     return sum / xs.length;
+}
+
+function best (centers) {
+    var max = centers[0];
+    for (var i = 1; i < centers.length; i++) {
+        if (centers[i].yield > max.yield) max = centers[i];
+    }
+    return max.center;
 }
