@@ -11,8 +11,4 @@ q.on('max', function (pt, x) {
     console.log('MAX', pt, x);
 });
 
-q.on('min', function (pt, x) {
-    console.log('MIN', pt, x);
-});
-
 q.start();
