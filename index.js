@@ -67,7 +67,8 @@ Search.prototype.start = function () {
             if (--pending !== 0) return;
             
             var c = best(self.centers);
-            next(c);
+            self.centers.splice(c.index, 1);
+            next(c.center);
         }
     }
     
@@ -113,8 +114,12 @@ function mean (xs) {
 
 function best (centers) {
     var max = centers[0];
+    var index = 0;
     for (var i = 1; i < centers.length; i++) {
-        if (centers[i].yield > max.yield) max = centers[i];
+        if (centers[i].yield > max.yield) {
+            max = centers[i];
+            index = i;
+        }
     }
-    return max;
+    return { center: max, index: index };
 }
