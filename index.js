@@ -45,6 +45,7 @@ Search.prototype.start = function () {
         var a = bounds[0][0], b = bounds[1][0];
         var fa = bounds[0][1], fb = bounds[1][1];
         var center = (a + b) / 2;
+        var centerMean = (fa + fb) / 2;
         
         fn(center, function (x) {
             self.emit('test', [ center ], x);
@@ -55,14 +56,22 @@ Search.prototype.start = function () {
             self.slopes.push(s0, s1);
             
             var thresh = (high - fa) / Math.abs(center - a);
-            var portion = self.slopes.filter(function (s) {
+            var highEnough = self.slopes.filter(function (s) {
                 return s > thresh;
             });
-            console.log('thresh=', thresh);
-            console.dir(portion);
+            var portion = highEnough.length / self.slopes.length;
+            var yield = mean(highEnough) / portion;
+            
+            console.log('yield=', yield);
             
             console.dir([ s0, s1 ]);
             
         });
     }
 };
+
+function mean (xs) {
+    var sum = 0;
+    for (var i = 0; i < xs.length; i++) sum += xs[i];
+    return sum / xs.length;
+}
