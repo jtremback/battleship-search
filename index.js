@@ -24,8 +24,7 @@ Search.prototype.start = function () {
     
     var fn = self.fn;
     var dims = self.bounds.length;
-    var init = {};
-    var pending = 2;
+    var init = { pending: 3 };
     
     self.running = true;
     
@@ -43,11 +42,39 @@ Search.prototype.start = function () {
         ready();
     });
     
+    init.c = (init.a + init.b) / 2;
+    fn(init.c, function (x) {
+        self.emit('test', [ init.c ], x);
+        init.fc = x;
+        ready();
+    });
+    
     function ready () {
-        if (--pending === 0) next(init.a, init.fa, init.b, init.fb);
+        if (--init.pending !== 0) return;
+        
+        var pending = 2;
+        
+        findYield(init.a, init.fa, init.c, init.fc, result);
+        findYield(init.c, init.fc, init.b, init.fb, result);
+        
+        function result (center) {
+            self.centers.push(center);
+            if (--pending !== 0) return;
+            
+            var c = best(self.centers);
+            findYield(c.a, c.fa, c.b, c.fb, onyield);
+        }
     }
     
-    function next (a, fa, b, fb) {
+    function onyield (cn) {
+        if (!self.running) return;
+        
+        self.centers.push(cn);
+        var c = best(self.centers);
+        findYield(c.a, c.fa, c.b, c.fb, onyield);
+    }
+    
+    function findYield (a, fa, b, fb, cb) {
         if (!self.running) return;
         
         var center = (a + b) / 2;
@@ -71,12 +98,12 @@ Search.prototype.start = function () {
             });
             var portion = highEnough.length / self.slopes.length;
             var yield = mean(highEnough) / portion;
-console.log('yield=', yield);
             
-            self.centers.push({ center: center, yield: yield });
-            
-            var nextCenter = best(self.centers);
-            //next();
+            cb({
+                center: center,
+                yield: yield,
+                a: a, b: b, fa: fa, fb: fb
+            });
         });
     }
 };
@@ -92,5 +119,5 @@ function best (centers) {
     for (var i = 1; i < centers.length; i++) {
         if (centers[i].yield > max.yield) max = centers[i];
     }
-    return max.center;
+    return max;
 }
