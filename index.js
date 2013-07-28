@@ -51,27 +51,24 @@ Search.prototype.start = function () {
     
     function ready () {
         if (--init.pending !== 0) return;
+        next(init);
+    }
+    
+    function next (pt) {
+        if (!self.running) return;
         
         var pending = 2;
         
-        findYield(init.a, init.fa, init.c, init.fc, result);
-        findYield(init.c, init.fc, init.b, init.fb, result);
+        findYield(pt.a, pt.fa, pt.c, pt.fc, result);
+        findYield(pt.c, pt.fc, pt.b, pt.fb, result);
         
         function result (center) {
             self.centers.push(center);
             if (--pending !== 0) return;
             
             var c = best(self.centers);
-            findYield(c.a, c.fa, c.b, c.fb, onyield);
+            next(c);
         }
-    }
-    
-    function onyield (cn) {
-        if (!self.running) return;
-        
-        self.centers.push(cn);
-        var c = best(self.centers);
-        findYield(c.a, c.fa, c.b, c.fb, onyield);
     }
     
     function findYield (a, fa, b, fb, cb) {
@@ -100,7 +97,7 @@ Search.prototype.start = function () {
             var yield = mean(highEnough) / portion;
             
             cb({
-                center: center,
+                c: center,
                 yield: yield,
                 a: a, b: b, fa: fa, fb: fb
             });
