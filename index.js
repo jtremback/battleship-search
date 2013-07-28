@@ -95,11 +95,11 @@ Search.prototype.start = function () {
                 return s > thresh;
             });
             var portion = highEnough.length / self.slopes.length;
-            var yield = mean(highEnough) / portion;
+            var yld = mean(highEnough) / portion;
             
             cb({
                 c: center,
-                yield: yield,
+                'yield': yld,
                 a: a, b: b, fa: fa, fb: fb
             });
         });
@@ -116,7 +116,7 @@ function best (centers) {
     var max = centers[0];
     var index = 0;
     for (var i = 1; i < centers.length; i++) {
-        if (centers[i].yield > max.yield) {
+        if (centers[i]['yield'] > max['yield']) {
             max = centers[i];
             index = i;
         }
