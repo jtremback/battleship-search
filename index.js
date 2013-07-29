@@ -1,6 +1,5 @@
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('inherits');
-var runningMean = require('running-mean');
 
 module.exports = Search;
 inherits(Search, EventEmitter);
@@ -9,7 +8,6 @@ function Search (bounds, fn) {
     if (!(this instanceof Search)) return new Search(bounds, fn);
     this.bounds = bounds;
     this.fn = fn;
-    this.errorMean = runningMean();
     this.slopes = [];
     this.centers = [];
     this.max = -Infinity;

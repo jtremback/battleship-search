@@ -1,0 +1,35 @@
+{
+  "name": "battleship-search",
+  "version": "0.0.0",
+  "description": "maximize an n-dimensional landscape using the battleship search algorithm",
+  "main": "index.js",
+  "dependencies": {
+    "inherits": "~2.0.0"
+  },
+  "devDependencies": {
+    "tape": "~1.0.4"
+  },
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/substack/battleship-search.git"
+  },
+  "homepage": "https://github.com/substack/battleship-search",
+  "keywords": [
+    "search",
+    "algorithm",
+    "binary",
+    "battleship",
+    "n-dimensional",
+    "landscape",
+    "multivariate"
+  ],
+  "author": {
+    "name": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net"
+  },
+  "license": "MIT"
+}
