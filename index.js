@@ -5,9 +5,9 @@ var expandBounds = require('./lib/expand_bounds.js');
 module.exports = Search;
 inherits(Search, EventEmitter);
 
-function Search (bounds, fn) {
-    if (!(this instanceof Search)) return new Search(bounds, fn);
-    this.bounds = bounds;
+function Search (range, fn) {
+    if (!(this instanceof Search)) return new Search(range, fn);
+    this.range = range;
     this.fn = fn;
     this.slopes = [];
     this.centers = [];
@@ -21,67 +21,74 @@ Search.prototype.stop = function () {
 
 Search.prototype.start = function () {
     var self = this;
-    
-    var fn = self.fn;
-    var init = { pending: 3 };
-    
     self.running = true;
     
-    init.a = [ self.bounds[0][0] ];
-    fn(init.a, function (x) {
-        init.fa = x;
-        self.emit('test', init.a, x);
-        ready();
+    var fn = self.fn;
+    var bounds = expandBounds(self.range);
+    var fbounds = [];
+    var pending = bounds.length + 1;
+    
+    bounds.forEach(function (pt, ix) {
+        fn(pt, function (value) {
+            fbounds[ix] = value;
+            self.emit('test', pt, value);
+            ready();
+        });
     });
     
-    init.b = [ self.bounds[0][1] ];
-    fn(init.b, function (x) {
-        self.emit('test', init.b, x);
-        init.fb = x;
-        ready();
-    });
-    
-    init.c = [ (init.a + init.b) / 2 ];
-    fn(init.c, function (x) {
-        self.emit('test', init.c, x);
-        init.fc = x;
+    var center = self.range.map(mean);
+    var fcenter;
+    fn(center, function (value) {
+        fcenter = value;
+        self.emit('test', center, value);
         ready();
     });
     
     function ready () {
-        if (--init.pending !== 0) return;
+        if (--pending !== 0) return;
         
-        self.max = Math.max(init.fa, init.fb, init.fc);
-        if (self.max === init.fa) {
-            self.emit('max', init.a, init.fa);
+        var max = { point: center, value: fcenter };
+        for (var i = 0; i < bounds.length; i++) {
+            if (fbounds[i] > max.value) {
+                max = { point: bounds[i], value: fbounds[i] };
+            }
         }
-        else if (self.max === init.fb) {
-            self.emit('max', init.b, init.fb);
-        }
-        else if (self.max === init.fc) {
-            self.emit('max', init.c, init.fc);
-        }
+        self.max = max.value;
+        self.emit('max', max.point, max.value);
         
-        self._next(init);
+        self._next(center, fcenter, bounds, fbounds);
     }
 };
 
-Search.prototype._next = function (pt) {
+Search.prototype._next = function (center, fcenter, bounds, fbounds) {
     var self = this;
     if (!self.running) return;
     
-    var pending = 2;
+    var pending = bounds.length;
     
-    self._findYield(pt.a, pt.fa, pt.c, pt.fc, result);
-    self._findYield(pt.c, pt.fc, pt.b, pt.fb, result);
+    bounds.forEach(function (b, i) {
+        var fb = fbounds[i];
+        self._findYield(b, fb, center, fcenter, result);
+    });
     
     function result (center) {
         self.centers.push(center);
         if (--pending !== 0) return;
         
-        var c = best(self.centers);
-        self.centers.splice(c.index, 1);
-        self._next(c.center);
+        var cy = best(self.centers);
+        var y = cy.center;
+        self.centers.splice(cy.index, 1);
+        
+        var nextBounds = [];
+        var nextFBounds = [];
+        for (var i = 0; i < y.a.length; i++) {
+            nextBounds.push([
+                Math.min(y.a[i], y.b[i]),
+                Math.max(y.a[i], y.b[i])
+            ]);
+            nextFBounds.push(y.fa, y.fb);
+        }
+        self._next(y.c, y.fc, expandBounds(nextBounds), nextFBounds);
     }
 };
     
@@ -89,7 +96,10 @@ Search.prototype._findYield = function (a, fa, b, fb, cb) {
     var self = this;
     if (!self.running) return;
     
-    var center = [ (a[0] + b[0]) / 2 ]; // TODO MULTI
+    var center = a.map(function (_, i) {
+        return (a[i] + b[i]) / 2;
+    });
+    
     var centerMean = (fa + fb) / 2;
     
     self.fn(center, function (fc) {
@@ -99,14 +109,15 @@ Search.prototype._findYield = function (a, fa, b, fb, cb) {
             self.max = fc;
         }
         
-        var s0 = (fa - fc) / (a[0] - center[0]); // TODO MULTI
-        var s1 = (fb - fc) / (b[0] - center[0]); // TODO MULTI
+        var distAC = dist(a, center);
+        var s0 = (fa - fc) / distAC;
+        var s1 = (fb - fc) / dist(b, center);
         self.slopes.push(s0, s1);
         
-        var thresh = (self.max - fa) / Math.abs(center[0] - a[0]); // TODO MULTI
+        var thresh = (self.max - fa) / distAC;
         
         var projected = self.slopes.map(function (s) {
-            return (a[0] - center[0]) * s + centerMean; // TODO MULTI
+            return distAC * s + centerMean;
         });
         var highEnough = projected.filter(function (s) {
             return s > thresh;
@@ -129,6 +140,15 @@ function mean (xs) {
     var sum = 0;
     for (var i = 0; i < xs.length; i++) sum += xs[i];
     return sum / xs.length;
+}
+
+function dist (a, b) {
+    var sum = 0;
+    for (var i = 0; i < a.length; i++) {
+        var d = a[i] - b[i];
+        sum += d * d;
+    }
+    return Math.sqrt(sum);
 }
 
 function best (centers) {
