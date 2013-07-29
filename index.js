@@ -62,25 +62,26 @@ Search.prototype.start = function () {
             self.emit('max', [ init.c ], init.fc);
         }
         
-        next(init);
+        self._next(init);
     }
+};
+
+Search.prototype._next = function (pt) {
+    var self = this;
+    if (!self.running) return;
     
-    function next (pt) {
-        if (!self.running) return;
+    var pending = 2;
+    
+    self._findYield(pt.a, pt.fa, pt.c, pt.fc, result);
+    self._findYield(pt.c, pt.fc, pt.b, pt.fb, result);
+    
+    function result (center) {
+        self.centers.push(center);
+        if (--pending !== 0) return;
         
-        var pending = 2;
-        
-        self._findYield(pt.a, pt.fa, pt.c, pt.fc, result);
-        self._findYield(pt.c, pt.fc, pt.b, pt.fb, result);
-        
-        function result (center) {
-            self.centers.push(center);
-            if (--pending !== 0) return;
-            
-            var c = best(self.centers);
-            self.centers.splice(c.index, 1);
-            next(c.center);
-        }
+        var c = best(self.centers);
+        self.centers.splice(c.index, 1);
+        self._next(c.center);
     }
 };
     
