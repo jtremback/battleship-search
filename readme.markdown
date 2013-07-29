@@ -62,6 +62,40 @@ TEST [ 2.8515625 ] 4.107647760472744
 MAX [ 2.8515625 ] 4.107647760472744
 ```
 
+## 4-dimensional example
+
+``` js
+var search = require('battleship-search');
+var domain = [ [ -5, 5 ], [ -5, 5 ], [ -5, 5 ], [ -5, 5 ] ];
+
+var q = search(domain, function (pt, cb) {
+    var x = pt[0], y = pt[1], z = pt[2], w = pt[3];
+    cb(
+        Math.sin(x + y * Math.cos(z) / 10)
+        + Math.sin(3 * y) - Math.cos(z + x) * 1/2
+        + Math.sin(5 * w) * Math.sin(3 * x + 4 * w) * 1/8
+    );
+});
+
+q.on('max', function (pt, x) {
+    console.log('MAX', pt, x);
+});
+
+q.start();
+```
+
+output:
+
+```
+MAX [ -5, 5, -5, 5 ] 2.0750809293428523
+MAX [ 1.25, -3.75, -3.75, 1.25 ] 2.365703195960478
+MAX [ 1.25, -3.75, -3.75, 3.75 ] 2.369529012327853
+MAX [ 1.25, -3.75, -3.75, -3.75 ] 2.3803181691252
+```
+
+Note: this 4-d output seems too sparse so there is probably a bug in the
+multi-dimensional code someplace.
+
 # methods
 
 ``` js
