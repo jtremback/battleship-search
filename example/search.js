@@ -1,5 +1,6 @@
 var search = require('../');
-var q = search([ [ 0, 5 ] ], function (x, cb) {
+var q = search([ [ 0, 5 ] ], function (pt, cb) {
+    var x = pt[0];
     cb(Math.sin(x) + Math.sqrt(x) * (x - 3) * (x + 4 * Math.sin(x)));
 });
 

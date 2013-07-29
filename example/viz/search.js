@@ -6,7 +6,7 @@ var q = search([ [ 0, 20 ] ], function (x, cb) {
     var res = Math.sin(5 * x) - Math.cos(x) + 1/4 * Math.sin(x - 1)
         - 2 * Math.cos(x)
     ;
-    setTimeout(function () { cb(res) }, 100);
+    setTimeout(function () { cb(res) }, 500);
 });
 
 var count = 0;

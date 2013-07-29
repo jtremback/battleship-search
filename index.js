@@ -12,6 +12,7 @@ function Search (bounds, fn) {
     this.errorMean = runningMean();
     this.slopes = [];
     this.centers = [];
+    this.max = -Infinity;
     this.running = false;
 }
 
@@ -29,21 +30,21 @@ Search.prototype.start = function () {
     self.running = true;
     
     init.a = self.bounds[0][0];
-    fn(init.a, function (x) {
+    fn([ init.a ], function (x) {
         init.fa = x;
         self.emit('test', [ init.a ], x);
         ready();
     });
     
     init.b = self.bounds[0][1];
-    fn(init.b, function (x) {
+    fn([ init.b ], function (x) {
         self.emit('test', [ init.b ], x);
         init.fb = x;
         ready();
     });
     
     init.c = (init.a + init.b) / 2;
-    fn(init.c, function (x) {
+    fn([ init.c ], function (x) {
         self.emit('test', [ init.c ], x);
         init.fc = x;
         ready();
@@ -78,8 +79,12 @@ Search.prototype.start = function () {
         var center = (a + b) / 2;
         var centerMean = (fa + fb) / 2;
         
-        fn(center, function (x) {
+        fn([ center ], function (x) {
             self.emit('test', [ center ], x);
+            if (x > self.max) {
+                self.emit('max', [ center ], x);
+                self.max = x;
+            }
             
             var s0 = (fa - x) / (a - center);
             var s1 = (fb - x) / (b - center);
