@@ -98,10 +98,9 @@ Search.prototype.start = function () {
             
             var s0 = (fa - x) / (a - center);
             var s1 = (fb - x) / (b - center);
-            var high = Math.max(fa, fb);
             self.slopes.push(s0, s1);
             
-            var thresh = (high - fa) / Math.abs(center - a);
+            var thresh = (self.max - fa) / Math.abs(center - a);
             
             var projected = self.slopes.map(function (s) {
                 return (a - center) * s + centerMean;
@@ -110,11 +109,10 @@ Search.prototype.start = function () {
                 return s > thresh;
             });
             var portion = highEnough.length / self.slopes.length;
-            var yld = mean(highEnough) / portion;
             
             cb({
                 c: center,
-                'yield': yld,
+                'yield': mean(highEnough) / portion,
                 a: a, b: b, fa: fa, fb: fb
             });
         });
