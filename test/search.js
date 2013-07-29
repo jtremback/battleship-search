@@ -31,7 +31,7 @@ var expected = [
 ];
 
 test('1-dimensional', function (t) {
-    t.plan(1);
+    t.plan(expected.length + 1);
     var results = [];
     
     var q = search([ [ 0, 5 ] ], function (pt, cb) {
@@ -45,15 +45,25 @@ test('1-dimensional', function (t) {
     var count = 0;
     q.on('test', function (pt, x) {
         results.push([ 'T', pt, x ]);
-        if (count++ > 20) {
-            t.deepEqual(expected, results);
-            q.stop();
-        }
+        if (count++ > 24) check();
     });
     
     q.on('max', function (pt, x) {
         results.push([ 'M', pt, x ]);
+        if (count++ > 24) check();
     });
     
     q.start();
+    
+    function check () {
+        t.equal(expected.length, results.length);
+        expected.forEach(function (v, i) {
+            t.deepEqual(
+                v, results[i],
+                '[' + i + '] ' + JSON.stringify(v) + ' !== '
+                + JSON.stringify(results[i])
+            );
+        });
+        q.stop();
+    }
 });
