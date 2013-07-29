@@ -1,5 +1,6 @@
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('inherits');
+var expandBounds = require('./lib/expand_bounds.js');
 
 module.exports = Search;
 inherits(Search, EventEmitter);
