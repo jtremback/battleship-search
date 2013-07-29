@@ -70,8 +70,8 @@ Search.prototype.start = function () {
         
         var pending = 2;
         
-        findYield(pt.a, pt.fa, pt.c, pt.fc, result);
-        findYield(pt.c, pt.fc, pt.b, pt.fb, result);
+        self._findYield(pt.a, pt.fa, pt.c, pt.fc, result);
+        self._findYield(pt.c, pt.fc, pt.b, pt.fb, result);
         
         function result (center) {
             self.centers.push(center);
@@ -82,41 +82,42 @@ Search.prototype.start = function () {
             next(c.center);
         }
     }
+};
     
-    function findYield (a, fa, b, fb, cb) {
-        if (!self.running) return;
+Search.prototype._findYield = function (a, fa, b, fb, cb) {
+    var self = this;
+    if (!self.running) return;
+    
+    var center = (a + b) / 2;
+    var centerMean = (fa + fb) / 2;
+    
+    self.fn([ center ], function (x) {
+        self.emit('test', [ center ], x);
+        if (x > self.max) {
+            self.emit('max', [ center ], x);
+            self.max = x;
+        }
         
-        var center = (a + b) / 2;
-        var centerMean = (fa + fb) / 2;
+        var s0 = (fa - x) / (a - center);
+        var s1 = (fb - x) / (b - center);
+        self.slopes.push(s0, s1);
         
-        fn([ center ], function (x) {
-            self.emit('test', [ center ], x);
-            if (x > self.max) {
-                self.emit('max', [ center ], x);
-                self.max = x;
-            }
-            
-            var s0 = (fa - x) / (a - center);
-            var s1 = (fb - x) / (b - center);
-            self.slopes.push(s0, s1);
-            
-            var thresh = (self.max - fa) / Math.abs(center - a);
-            
-            var projected = self.slopes.map(function (s) {
-                return (a - center) * s + centerMean;
-            });
-            var highEnough = projected.filter(function (s) {
-                return s > thresh;
-            });
-            var portion = highEnough.length / self.slopes.length;
-            
-            cb({
-                c: center,
-                'yield': mean(highEnough) / portion,
-                a: a, b: b, fa: fa, fb: fb
-            });
+        var thresh = (self.max - fa) / Math.abs(center - a);
+        
+        var projected = self.slopes.map(function (s) {
+            return (a - center) * s + centerMean;
         });
-    }
+        var highEnough = projected.filter(function (s) {
+            return s > thresh;
+        });
+        var portion = highEnough.length / self.slopes.length;
+        
+        cb({
+            c: center,
+            'yield': mean(highEnough) / portion,
+            a: a, b: b, fa: fa, fb: fb
+        });
+    });
 };
 
 function mean (xs) {
