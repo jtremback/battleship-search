@@ -26,23 +26,23 @@ Search.prototype.start = function () {
     
     self.running = true;
     
-    init.a = self.bounds[0][0];
-    fn([ init.a ], function (x) {
+    init.a = [ self.bounds[0][0] ];
+    fn(init.a, function (x) {
         init.fa = x;
-        self.emit('test', [ init.a ], x);
+        self.emit('test', init.a, x);
         ready();
     });
     
-    init.b = self.bounds[0][1];
-    fn([ init.b ], function (x) {
-        self.emit('test', [ init.b ], x);
+    init.b = [ self.bounds[0][1] ];
+    fn(init.b, function (x) {
+        self.emit('test', init.b, x);
         init.fb = x;
         ready();
     });
     
-    init.c = (init.a + init.b) / 2;
-    fn([ init.c ], function (x) {
-        self.emit('test', [ init.c ], x);
+    init.c = [ (init.a + init.b) / 2 ];
+    fn(init.c, function (x) {
+        self.emit('test', init.c, x);
         init.fc = x;
         ready();
     });
@@ -52,13 +52,13 @@ Search.prototype.start = function () {
         
         self.max = Math.max(init.fa, init.fb, init.fc);
         if (self.max === init.fa) {
-            self.emit('max', [ init.a ], init.fa);
+            self.emit('max', init.a, init.fa);
         }
         else if (self.max === init.fb) {
-            self.emit('max', [ init.b ], init.fb);
+            self.emit('max', init.b, init.fb);
         }
         else if (self.max === init.fc) {
-            self.emit('max', [ init.c ], init.fc);
+            self.emit('max', init.c, init.fc);
         }
         
         self._next(init);
@@ -88,24 +88,24 @@ Search.prototype._findYield = function (a, fa, b, fb, cb) {
     var self = this;
     if (!self.running) return;
     
-    var center = (a + b) / 2;
+    var center = [ (a[0] + b[0]) / 2 ]; // TODO MULTI
     var centerMean = (fa + fb) / 2;
     
-    self.fn([ center ], function (fc) {
-        self.emit('test', [ center ], fc);
+    self.fn(center, function (fc) {
+        self.emit('test', center, fc);
         if (fc > self.max) {
-            self.emit('max', [ center ], fc);
+            self.emit('max', center, fc);
             self.max = fc;
         }
         
-        var s0 = (fa - fc) / (a - center);
-        var s1 = (fb - fc) / (b - center);
+        var s0 = (fa - fc) / (a[0] - center[0]); // TODO MULTI
+        var s1 = (fb - fc) / (b[0] - center[0]); // TODO MULTI
         self.slopes.push(s0, s1);
         
-        var thresh = (self.max - fa) / Math.abs(center - a);
+        var thresh = (self.max - fa) / Math.abs(center[0] - a[0]); // TODO MULTI
         
         var projected = self.slopes.map(function (s) {
-            return (a - center) * s + centerMean;
+            return (a[0] - center[0]) * s + centerMean; // TODO MULTI
         });
         var highEnough = projected.filter(function (s) {
             return s > thresh;
