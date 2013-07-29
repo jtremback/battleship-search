@@ -52,6 +52,18 @@ Search.prototype.start = function () {
     
     function ready () {
         if (--init.pending !== 0) return;
+        
+        self.max = Math.max(init.fa, init.fb, init.fc);
+        if (self.max === init.fa) {
+            self.emit('max', [ init.a ], init.fa);
+        }
+        else if (self.max === init.fb) {
+            self.emit('max', [ init.b ], init.fb);
+        }
+        else if (self.max === init.fc) {
+            self.emit('max', [ init.c ], init.fc);
+        }
+        
         next(init);
     }
     
