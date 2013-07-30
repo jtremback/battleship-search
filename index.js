@@ -8,7 +8,17 @@ inherits(Search, EventEmitter);
 function Search (range, fn) {
     if (!(this instanceof Search)) return new Search(range, fn);
     this.range = range;
-    this.fn = fn;
+    
+    var results = {};
+    this.fn = function (pt, cb) {
+        var key = pt.join(',');
+        if (results[key]) cb(results[key])
+        else fn(pt, function (value) {
+            results[key] = value;
+            cb(value);
+        });
+    };
+    
     this.slopes = [];
     this.centers = [];
     this.max = -Infinity;
@@ -80,15 +90,24 @@ Search.prototype._next = function (center, fcenter, bounds, fbounds) {
         self.centers.splice(cy.index, 1);
         
         var nextBounds = [];
-        var nextFBounds = [];
         for (var i = 0; i < y.a.length; i++) {
             nextBounds.push([
                 Math.min(y.a[i], y.b[i]),
                 Math.max(y.a[i], y.b[i])
             ]);
-            nextFBounds.push(y.fa, y.fb);
         }
-        self._next(y.c, y.fc, expandBounds(nextBounds), nextFBounds);
+        
+        var points = expandBounds(nextBounds);
+        var bpending = points.length;
+        var fpoints = [];
+        points.forEach(function (pt, ix) {
+            self.fn(pt, function (value) {
+                fpoints[ix] = value;
+                if (--bpending === 0) {
+                    self._next(y.c, y.fc, points, fpoints);
+                }
+            });
+        });
     }
 };
     
