@@ -5,8 +5,18 @@ var expandBounds = require('./lib/expand_bounds.js');
 module.exports = Search;
 inherits(Search, EventEmitter);
 
-function Search (range, fn) {
-    if (!(this instanceof Search)) return new Search(range, fn);
+var immediate = typeof setImmediate !== 'undefined'
+    ? setImmediate : process.nextTick
+;
+
+function Search (range, opts, fn) {
+    if (!(this instanceof Search)) return new Search(range, opts, fn);
+    if (typeof opts === 'function') {
+        fn = opts;
+        opts = {};
+    }
+    if (!opts) opts = {};
+    
     this.range = range;
     
     var results = {};
@@ -15,7 +25,7 @@ function Search (range, fn) {
         if (results[key]) cb(results[key])
         else fn(pt, function (value) {
             results[key] = value;
-            cb(value);
+            immediate(function () { cb(value) });
         });
     };
     
