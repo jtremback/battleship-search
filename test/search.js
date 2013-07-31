@@ -17,11 +17,9 @@ test('1-dimensional', function (t) {
     t.on('end', function () { q.stop() });
     
     q.on('max', function (pt, x) {
-        if (x > 4.10827) {
-            t.pass('found a good enough solution');
-        }
         if (results.length === 13) {
             t.pass('got enough maximum results');
+            t.ok(x > 4.10827, 'found a good enough solution');
         }
         results.push([ pt, x ]);
     });
