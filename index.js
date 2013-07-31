@@ -129,21 +129,25 @@ Search.prototype._findYield = function (a, fa, b, fb, cb) {
             self.emit('max', center, fc);
             self.max = fc;
         }
+        var range = [ Math.min(centerMean, fc), Math.max(centerMean, fc) ];
         
         var distAC = dist(a, center);
         var s0 = (fa - fc) / distAC;
-        var s1 = (fb - fc) / dist(b, center);
-        self.slopes.push(s0, s1);
+        self.slopes.push({ range: range, slope: s0 });
         
         var thresh = (self.max - fa) / distAC;
+        var appliedSlopes = self.slopes.filter(function (s) {
+            return s.range[0] >= centerMean && s.range[1] <= centerMean;
+        });
+        if (appliedSlopes.length === 0) appliedSlopes = self.slopes;
         
-        var projected = self.slopes.map(function (s) {
-            return distAC * s + centerMean;
+        var projected = appliedSlopes.map(function (s) {
+            return distAC * s.slope + centerMean;
         });
         var highEnough = projected.filter(function (s) {
             return s > thresh;
         });
-        var portion = highEnough.length / self.slopes.length;
+        var portion = highEnough.length / appliedSlopes.length;
         
         cb({
             'yield': portion > 0
