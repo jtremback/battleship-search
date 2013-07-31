@@ -1,37 +1,9 @@
 var search = require('../');
 var test = require('tape');
 
-var expected = [
-    ['T',[0],-3.210367746201974],
-    ['T',[5],-1.1725389303144338],
-    ['T',[2.5],2.586482695940614],
-    ['M',[2.5],2.586482695940614],
-    ['T',[1.25],-0.9172953139197322],
-    ['T',[3.75],2.457701773132917],
-    ['T',[3.125],3.2950351120302708],
-    ['M',[3.125],3.2950351120302708],
-    ['T',[4.375],1.051137369654716],
-    ['T',[4.0625],2.8292361992816173],
-    ['T',[4.6875],-1.0474059319720759],
-    ['T',[3.90625],2.853262288251983],
-    ['T',[4.21875],2.1839376570275504],
-    ['T',[4.140625],2.5838763083094087],
-    ['T',[4.296875],1.6576747894464356],
-    ['T',[2.8125],4.078954538271598],
-    ['M',[2.8125],4.078954538271598],
-    ['T',[3.4375],2.0356107371499594],
-    ['T',[2.65625],3.558159548506052],
-    ['T',[2.96875],3.9463482836752064],
-    ['T',[3.28125],2.517401415907384],
-    ['T',[3.59375],2.0574794924829236],
-    ['T',[2.890625],4.093839145038978],
-    ['M',[2.890625],4.093839145038978],
-    ['T',[3.046875],3.6648351771981242],
-    ['T',[2.8515625],4.107647760472744]
-];
-
 test('1-dimensional', function (t) {
-    t.plan(expected.length + 1);
+    t.plan(2);
+    
     var results = [];
     
     var q = search([ [ 0, 5 ] ], function (pt, cb) {
@@ -42,28 +14,17 @@ test('1-dimensional', function (t) {
         );
     });
     
-    var count = 0;
-    q.on('test', function (pt, x) {
-        results.push([ 'T', pt, x ]);
-        if (count++ > 24) check();
-    });
+    t.on('end', function () { q.stop() });
     
     q.on('max', function (pt, x) {
-        results.push([ 'M', pt, x ]);
-        if (count++ > 24) check();
+        if (x > 4.10827) {
+            t.pass('found a good enough solution');
+        }
+        if (results.length === 13) {
+            t.pass('got enough maximum results');
+        }
+        results.push([ pt, x ]);
     });
     
     q.start();
-    
-    function check () {
-        t.equal(expected.length, results.length);
-        expected.forEach(function (v, i) {
-            t.deepEqual(
-                v, results[i],
-                '[' + i + '] ' + JSON.stringify(v) + ' !== '
-                + JSON.stringify(results[i])
-            );
-        });
-        q.stop();
-    }
 });
