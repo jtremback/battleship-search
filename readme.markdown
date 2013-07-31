@@ -3,6 +3,10 @@
 maximize an n-dimensional landscape using the
 [battleship search algorithm](http://opensourceecology.org/wiki/Anthony_Repetto/Concept_Log#Binary_Search)
 
+[![build status](https://secure.travis-ci.org/substack/battleship-search.png)](http://travis-ci.org/substack/battleship-search)
+
+[![testling badge](https://ci.testling.com/substack/battleship-search.png)](https://ci.testling.com/substack/battleship-search)
+
 # example
 
 ## 1-dimensional
