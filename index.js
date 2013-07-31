@@ -46,15 +46,7 @@ Search.prototype.start = function () {
     var fn = self.fn;
     var bounds = expandBounds(self.range);
     var fbounds = [];
-    var pending = bounds.length + 1;
-    
-    bounds.forEach(function (pt, ix) {
-        fn(pt, function (value) {
-            fbounds[ix] = value;
-            self.emit('test', pt, value);
-            ready();
-        });
-    });
+    var pending = 1;
     
     var center = self.range.map(mean);
     var fcenter;
