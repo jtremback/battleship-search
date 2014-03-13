@@ -1,6 +1,7 @@
 var search = require('../../');
 var viewer = require('./viewer')();
 viewer.appendTo('#viewer');
+var maxLabel = document.querySelector('#max');
 
 var q = search([ [ 0, 5 ], [ 0, 5 ] ], function (pt) {
     var x = pt[0], y = pt[1];
@@ -19,6 +20,11 @@ q.on('region', function (r) {
 q.on('divide', function (r) {
     var key = r.points.join(' ');
     shapes[key].parentNode.removeChild(shapes[key]);
+});
+
+q.on('max', function (x) {
+    console.log('MAX', x);
+    maxLabel.textContent = x;
 });
 
 var next = document.querySelector('#next');

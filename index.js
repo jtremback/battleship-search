@@ -109,6 +109,10 @@ Search.prototype.next = function () {
 };
 
 Search.prototype.best = function () {
+    for (var i = 0; i < this.regions.length; i++) {
+        this.regions[i].recompute();
+    }
+    
     var max = this.regions[0];
     var index = 0;
     for (var i = 0; i < this.regions.length; i++) {
@@ -122,7 +126,10 @@ Search.prototype.best = function () {
 };
 
 Search.prototype.setPoint = function (pt, value) {
-    if (value > this.max) this.max = value;
+    if (value > this.max) {
+        this.max = value;
+        this.emit('max', value);
+    }
     
     var regions = this._pointMap[pt.join(',')];
     for (var i = 0; i < regions.length; i++) {
