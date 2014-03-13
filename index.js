@@ -89,6 +89,10 @@ Search.prototype.next = function () {
                 var pt = r.points[j];
                 var pkey = pt.join(',');
                 if (!this._pointMap[pkey]) this._pointMap[pkey] = [];
+                var pmk = this._pointMap[pkey];
+                if (r.values[j] === undefined && pmk[0]) {
+                    r.values[j] = pmk[1][0].values[pmk[1][1]];
+                }
             }
             var ckey = r.center.join(',');
             if (!this._pointMap[ckey]) this._pointMap[ckey] = [];
