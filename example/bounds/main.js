@@ -22,7 +22,7 @@ q.on('divide', function (r) {
     shapes[key].parentNode.removeChild(shapes[key]);
 });
 
-q.on('max', function (x) {
+q.on('max', function (pt, x) {
     console.log('MAX', x);
     maxLabel.textContent = x;
 });

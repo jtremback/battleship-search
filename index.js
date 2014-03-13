@@ -28,9 +28,11 @@ function Search (range, opts, fn) {
     this.center = range.map(mean);
     
     for (var i = 0; i < this.corners.length; i++) {
-        var a = this.corners[i];
-        var b = this.corners[(i+1) % this.corners.length];
-        var r = Region([ a, b, this.center ], [], this)
+        var pts = [ this.center ];
+        for (var j = 0; j < this.range.length; j++) {
+            pts.push(this.corners[(i+j) % this.corners.length]);
+        }
+        var r = Region(pts, [], this)
         
         var ckey = r.center.join(',');
         if (!this._pointMap[ckey]) this._pointMap[ckey] = [];
