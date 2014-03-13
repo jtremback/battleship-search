@@ -28,7 +28,8 @@ function Search (range, opts, fn) {
     for (var i = 0; i < this.corners.length; i++) {
         var a = this.corners[i];
         var b = this.corners[(i+1) % this.corners.length];
-        this.regions.push(Region([ a, b, this.center ]));
+        var r = Region([ a, b, this.center ])
+        this.regions.push(r);
     }
     
     this.max = -Infinity;

@@ -18,11 +18,11 @@ Viewer.prototype.plot = function (pt) {
 
 Viewer.prototype.bound = function (rpts) {
     var self = this;
+console.log('pts=', rpts.join(' '));
     var pts = rpts.map(function (pt) {
-        return pt.map(function (p) { return p * self.scale });
+        return pt.map(function (p) { return p * self.scale + 5 });
     });
     var p = createElement('polygon');
-    console.log('pts=', pts.join(' '));
     p.setAttribute('points', pts.join(' '));
     var color = mr().rgb();
     p.setAttribute('fill', 'rgba(' + color.join(',') + ',0.5)');
