@@ -14,11 +14,11 @@ Viewer.prototype.plot = function (pt) {
     c.setAttribute('fill', 'blue');
     c.setAttribute('r', 2);
     this.element.appendChild(c);
+    return c;
 };
 
 Viewer.prototype.bound = function (rpts) {
     var self = this;
-console.log('pts=', rpts.join(' '));
     var pts = rpts.map(function (pt) {
         return pt.map(function (p) { return p * self.scale + 5 });
     });
