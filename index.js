@@ -100,6 +100,7 @@ Search.prototype._next = function (center, fcenter, bounds, fbounds) {
         }
         
         var points = expandBounds(nextBounds);
+        self.emit('bound', points);
         var bpending = points.length;
         var fpoints = [];
         points.forEach(function (pt, ix) {

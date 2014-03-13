@@ -26,6 +26,10 @@ q.on('test', function (pt, x) {
     //if (count++ > 20) q.stop();
 });
 
+q.on('bound', function (b) {
+    viewer.bound(b);
+});
+
 q.on('max', function (pt, x) {
     console.log('MAX', pt, x);
 });

@@ -1,17 +1,32 @@
 module.exports = Viewer;
+var mr = require('mrcolor')();
 
 function Viewer () {
     if (!(this instanceof Viewer)) return new Viewer;
     this.element = createElement('svg');
+    this.scale = 100;
 }
 
 Viewer.prototype.plot = function (pt) {
     var c = createElement('circle');
-    c.setAttribute('cx', pt[0] * 100);
-    c.setAttribute('cy', pt[1] * 100);
+    c.setAttribute('cx', pt[0] * this.scale);
+    c.setAttribute('cy', pt[1] * this.scale);
     c.setAttribute('fill', 'blue');
     c.setAttribute('r', 2);
     this.element.appendChild(c);
+};
+
+Viewer.prototype.bound = function (rpts) {
+    var self = this;
+    var pts = rpts.map(function (pt) {
+        return pt.map(function (p) { return p * self.scale });
+    });
+    var p = createElement('polygon');
+    console.log('pts=', pts.join(' '));
+    p.setAttribute('points', pts.join(' '));
+    var color = mr().rgb();
+    p.setAttribute('fill', 'rgba(' + color.join(',') + ',0.5)');
+    this.element.appendChild(p);
 };
 
 Viewer.prototype.appendTo = function (target) {
