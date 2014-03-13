@@ -17,7 +17,6 @@ function Search (range, opts, fn) {
     this.corners = expandBounds(range);
     this.fn = fn;
     
-    this.slopes = [];
     this.regions = [];
     this._pointMap = {};
     
