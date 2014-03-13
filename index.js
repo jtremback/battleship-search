@@ -27,6 +27,10 @@ function Search (range, opts, fn) {
         var a = this.corners[i];
         var b = this.corners[(i+1) % this.corners.length];
         var r = Region([ a, b, this.center ], [], this)
+        
+        var ckey = r.center.join(',');
+        if (!this._pointMap[ckey]) this._pointMap[ckey] = [];
+        
         r.points.forEach(function (pt, ix) {
             var key = pt.join(',');
             if (!self._pointMap[key]) self._pointMap[key] = [];
@@ -42,21 +46,28 @@ function Search (range, opts, fn) {
 Search.prototype.next = function () {
     if (this.iteration === 0) {
         var value = this.fn(this.center);
-        this.iteration ++;
         this.setPoint(this.center, value);
+        this.iteration ++;
         return { point: this.center, value: value };
     }
     if (this.iteration <= this.corners.length) {
         var ix = this.iteration - 1;
         var pt = this.corners[ix];
         var r = this.regions[ix];
-        this.iteration ++;
         var value = this.fn(pt);
         this.setPoint(pt, value);
+        this.iteration ++;
         return { point: pt, value: value };
     }
-    
-    this.iteration ++;
+    if (this.iteration <= this.corners.length + this.regions.length) {
+        var ix = this.iteration - this.corners.length - 1;
+        var r = this.regions[ix];
+        var value = this.fn(r.center);
+        this.setPoint(r.center, value);
+        r.setValue(value);
+        this.iteration ++;
+        return { point: r.center, value: value };
+    }
 };
 
 Search.prototype.best = function () {
