@@ -19,6 +19,7 @@ function Search (range, opts, fn) {
     
     this.regions = [];
     this._pointMap = {};
+    this._pending = [];
     
     this.center = range.map(mean);
     
@@ -67,6 +68,33 @@ Search.prototype.next = function () {
         this.iteration ++;
         return { point: r.center, value: value };
     }
+    
+    if (this._pending.length === 0) {
+        var best = this.best();
+        var subRegions = best.region.divide();
+        
+        var xs = [ best.index, 1 ].concat(subRegions);
+        this.regions.splice.apply(this.regions, xs);
+        
+        for (var i = 0; i < subRegions.length; i++) {
+            var r = subRegions[i];
+            for (var j = 0; j < r.points.length; j++) {
+                var pt = r.points[j];
+                var pkey = pt.join(',');
+                if (!this._pointMap[pkey]) this._pointMap[pkey] = [];
+            }
+            var ckey = r.center.join(',');
+            if (!this._pointMap[ckey]) this._pointMap[ckey] = [];
+            this._pending.push(r);
+        }
+    }
+    
+    var p = this._pending.shift();
+    var value = this.fn(p.center);
+    this.setPoint(p.center, value);
+    p.setValue(value);
+    this.iteration ++;
+    return { point: p.center, value: value };
 };
 
 Search.prototype.best = function () {
@@ -79,10 +107,12 @@ Search.prototype.best = function () {
             index = i;
         }
     }
-    return { center: max, index: index };
+    return { region: max, index: index };
 };
 
 Search.prototype.setPoint = function (pt, value) {
+    if (value > this.max) this.max = value;
+    
     var regions = this._pointMap[pt.join(',')];
     for (var i = 0; i < regions.length; i++) {
         var r = regions[i][0];
