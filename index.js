@@ -45,6 +45,7 @@ Search.prototype.start = function () {
     
     var fn = self.fn;
     var bounds = expandBounds(self.range);
+    
     var fbounds = [];
     var pending = 1;
     
@@ -77,10 +78,12 @@ Search.prototype._next = function (center, fcenter, bounds, fbounds) {
     if (!self.running) return;
     
     var pending = bounds.length;
-    
     bounds.forEach(function (b, i) {
         var fb = fbounds[i];
-        self._findYield(b, fb, center, fcenter, result);
+        self._findYield(
+            createPoint(b, fb, center, fcenter),
+            result
+        );
     });
     
     function result (center) {
@@ -114,52 +117,64 @@ Search.prototype._next = function (center, fcenter, bounds, fbounds) {
     }
 };
     
-Search.prototype._findYield = function (a, fa, b, fb, cb) {
-    var self = this;
-    if (!self.running) return;
-    
+function createPoint (a, fa, b, fb) {
     var center = a.map(function (_, i) {
         return (a[i] + b[i]) / 2;
     });
+    return {
+        a: a, fa: fa,
+        b: b, fb: fb,
+        distAC: dist(a, center),
+        c: center,
+        centerMean: (fa + fb) / 2
+    };
+};
+
+Search.prototype._findYield = function (point, cb) {
+    var self = this;
+    if (!self.running) return;
     
-    var centerMean = (fa + fb) / 2;
-    
-    self.fn(center, function (fc) {
-        self.emit('test', center, fc);
+    self.fn(point.c, function (fc) {
+        point.fc = fc;
+        
+        self.emit('test', point.c, fc);
         if (fc > self.max) {
-            self.emit('max', center, fc);
+            self.emit('max', point.c, fc);
             self.max = fc;
         }
-        var range = [ Math.min(centerMean, fc), Math.max(centerMean, fc) ];
+        var range = [
+            Math.min(point.centerMean, fc),
+            Math.max(point.centerMean, fc)
+        ];
         
-        var distAC = dist(a, center);
-        var s0 = (fa - fc) / distAC;
+        var s0 = (point.fa - point.fc) / point.distAC;
         self.slopes.push({ range: range, slope: s0 });
         
-        var thresh = (self.max - fa) / distAC;
+        for (var i = 0; i < self.centers.length; i++) {
+            var c = self.centers[i];
+            c.yield = computeYield(c);
+        }
+        point.yield = computeYield(point); // necessary?
+        
+        cb(point);
+    });
+    
+    function computeYield (c) {
+        var thresh = (self.max - c.fa) / c.distAC;
         var appliedSlopes = self.slopes.filter(function (s) {
-            return s.range[0] >= centerMean && s.range[1] <= centerMean;
+            return s.range[0] >= c.centerMean && s.range[1] <= c.centerMean;
         });
         if (appliedSlopes.length === 0) appliedSlopes = self.slopes;
         
         var projected = appliedSlopes.map(function (s) {
-            return distAC * s.slope + centerMean;
+            return c.distAC * s.slope + c.centerMean;
         });
         var highEnough = projected.filter(function (s) {
             return s > thresh;
         });
         var portion = highEnough.length / appliedSlopes.length;
-        
-        cb({
-            'yield': portion > 0
-                ? mean(highEnough) / portion
-                : 0
-            ,
-            a: a, fa: fa,
-            b: b, fb: fb,
-            c: center, fc: fc
-        });
-    });
+        return portion > 0 ? mean(highEnough) / portion : 0
+    }
 };
 
 function mean (xs) {
