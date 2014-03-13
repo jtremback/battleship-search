@@ -25,8 +25,9 @@ Viewer.prototype.bound = function (rpts) {
     var p = createElement('polygon');
     p.setAttribute('points', pts.join(' '));
     var color = mr().rgb();
-    p.setAttribute('fill', 'rgba(' + color.join(',') + ',0.5)');
+    p.setAttribute('fill', 'rgba(' + color.join(',') + ',0.1)');
     this.element.appendChild(p);
+    return p;
 };
 
 Viewer.prototype.appendTo = function (target) {

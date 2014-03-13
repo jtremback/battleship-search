@@ -10,8 +10,15 @@ var q = search([ [ 0, 5 ], [ 0, 5 ] ], function (pt) {
     ;
 });
 
+var shapes = {};
 q.on('region', function (r) {
-    viewer.bound(r.points)
+    var key = r.points.join(' ');
+    shapes[key] = viewer.bound(r.points)
+});
+
+q.on('divide', function (r) {
+    var key = r.points.join(' ');
+    shapes[key].parentNode.removeChild(shapes[key]);
 });
 
 var next = document.querySelector('#next');
