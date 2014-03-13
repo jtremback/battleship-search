@@ -10,7 +10,7 @@ var q = search([ [ 0, 5 ], [ 0, 5 ] ], function (pt) {
     ;
 });
 
-q.regions.forEach(function (r) {
+q.on('region', function (r) {
     viewer.bound(r.points)
 });
 

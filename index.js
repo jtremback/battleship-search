@@ -2,7 +2,11 @@ var expandBounds = require('./lib/expand_bounds.js');
 var Region = require('./lib/region.js');
 var mean = require('./lib/mean.js');
 
+var inherits = require('inherits');
+var EventEmitter = require('events').EventEmitter;
+
 module.exports = Search;
+inherits(Search, EventEmitter);
 
 function Search (range, opts, fn) {
     var self = this;
@@ -65,6 +69,7 @@ Search.prototype.next = function () {
         var value = this.fn(r.center);
         this.setPoint(r.center, value);
         r.setValue(value);
+        this.emit('region', r);
         this.iteration ++;
         return { point: r.center, value: value };
     }
@@ -73,11 +78,13 @@ Search.prototype.next = function () {
         var best = this.best();
         var subRegions = best.region.divide();
         
+        this.emit('divide', best.region);
         var xs = [ best.index, 1 ].concat(subRegions);
         this.regions.splice.apply(this.regions, xs);
         
         for (var i = 0; i < subRegions.length; i++) {
             var r = subRegions[i];
+            this.emit('region', r);
             for (var j = 0; j < r.points.length; j++) {
                 var pt = r.points[j];
                 var pkey = pt.join(',');
