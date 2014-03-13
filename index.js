@@ -126,9 +126,10 @@ Search.prototype.best = function () {
 };
 
 Search.prototype.setPoint = function (pt, value) {
+    this.emit('test', pt, value);
     if (value > this.max) {
         this.max = value;
-        this.emit('max', value);
+        this.emit('max', pt, value);
     }
     
     var regions = this._pointMap[pt.join(',')];
