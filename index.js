@@ -1,9 +1,8 @@
-var EventEmitter = require('events').EventEmitter;
-var inherits = require('inherits');
 var expandBounds = require('./lib/expand_bounds.js');
+var Region = require('./lib/region.js');
+var mean = require('./lib/mean.js');
 
 module.exports = Search;
-inherits(Search, EventEmitter);
 
 var immediate = typeof setImmediate !== 'undefined'
     ? setImmediate : process.nextTick
@@ -18,25 +17,35 @@ function Search (range, opts, fn) {
     if (!opts) opts = {};
     
     this.range = range;
-    
-    var results = {};
-    this.fn = function (pt, cb) {
-        var key = pt.join(',');
-        if (results[key]) cb(results[key])
-        else fn(pt, function (value) {
-            results[key] = value;
-            immediate(function () { cb(value) });
-        });
-    };
+    this.corners = expandBounds(range);
+    this.fn = fn;
     
     this.slopes = [];
-    this.centers = [];
+    this.regions = [];
+    
+    this.center = range.map(mean);
+    
+    for (var i = 0; i < this.corners.length; i++) {
+        var a = this.corners[i];
+        var b = this.corners[(i+1) % this.corners.length];
+        this.regions.push(Region([ a, b, this.center ]));
+    }
+    
     this.max = -Infinity;
-    this.running = false;
+    this.iteration = 0;
 }
 
-Search.prototype.stop = function () {
-    this.running = false;
+Search.prototype.next = function () {
+    if (this.iteration === 0) {
+        var res = this.fn(this.center);
+        this.iteration ++;
+        return { point: this.center, value: res };
+    }
+    if (this.iteration <= this.corners.length) {
+        var pt = this.corners[this.iteration - 1];
+        this.iteration ++;
+        return { point: pt, value: this.fn(pt) };
+    }
 };
 
 Search.prototype.start = function () {
@@ -176,30 +185,3 @@ Search.prototype._findYield = function (point, cb) {
         return portion > 0 ? mean(highEnough) / portion : 0
     }
 };
-
-function mean (xs) {
-    var sum = 0;
-    for (var i = 0; i < xs.length; i++) sum += xs[i];
-    return sum / xs.length;
-}
-
-function dist (a, b) {
-    var sum = 0;
-    for (var i = 0; i < a.length; i++) {
-        var d = a[i] - b[i];
-        sum += d * d;
-    }
-    return Math.sqrt(sum);
-}
-
-function best (centers) {
-    var max = centers[0];
-    var index = 0;
-    for (var i = 1; i < centers.length; i++) {
-        if (centers[i]['yield'] > max['yield']) {
-            max = centers[i];
-            index = i;
-        }
-    }
-    return { center: max, index: index };
-}

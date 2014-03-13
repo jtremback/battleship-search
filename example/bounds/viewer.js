@@ -4,13 +4,13 @@ var mr = require('mrcolor')();
 function Viewer () {
     if (!(this instanceof Viewer)) return new Viewer;
     this.element = createElement('svg');
-    this.scale = 100;
+    this.scale = 80;
 }
 
 Viewer.prototype.plot = function (pt) {
     var c = createElement('circle');
-    c.setAttribute('cx', pt[0] * this.scale);
-    c.setAttribute('cy', pt[1] * this.scale);
+    c.setAttribute('cx', pt[0] * this.scale + 5);
+    c.setAttribute('cy', pt[1] * this.scale + 5);
     c.setAttribute('fill', 'blue');
     c.setAttribute('r', 2);
     this.element.appendChild(c);
