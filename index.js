@@ -25,30 +25,33 @@ function Search (range, opts, fn) {
     this._pointMap = {};
     this._buffered = [];
     
-    this.center = range.map(mean);
-    
-    for (var i = 0; i < this.corners.length; i++) {
-        var pts = [ this.center ];
-        for (var j = 0; j < this.range.length; j++) {
-            pts.push(this.corners[(i+j) % this.corners.length]);
-        }
-        this.regions.push(Region(pts, function (pt) {
-            return self.test(pt);
-        }));
-    }
-    
     this.max = -Infinity;
     this.iteration = 0;
 }
 
 Search.prototype.next = function () {
+    var self = this;
+    
     if (this._buffered.length > 0) {
         this.iteration ++;
         return this._buffered.shift();
     }
     
     if (this.iteration === 0) {
-        this.test(this.center);
+        var center = this.range.map(mean);
+        this.test(center);
+        
+        for (var i = 0; i < this.corners.length; i++) {
+            var pts = [ center ];
+            for (var j = 0; j < this.range.length; j++) {
+                pts.push(this.corners[(i+j) % this.corners.length]);
+            }
+            var r = Region(pts, function (pt) {
+                return self.test(pt);
+            });
+            this.regions.push(r);
+            this.emit('region', r);
+        }
     }
     else if (this.iteration <= this.corners.length) {
         var ix = this.iteration - 1;
