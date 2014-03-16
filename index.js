@@ -23,7 +23,7 @@ function Search (range, opts, fn) {
     
     this.regions = [];
     this._pointMap = {};
-    this._pending = [];
+    this._buffered = [];
     
     this.center = range.map(mean);
     
@@ -32,17 +32,9 @@ function Search (range, opts, fn) {
         for (var j = 0; j < this.range.length; j++) {
             pts.push(this.corners[(i+j) % this.corners.length]);
         }
-        var r = Region(pts, [])
-        
-        var ckey = r.center.join(',');
-        if (!this._pointMap[ckey]) this._pointMap[ckey] = [];
-        
-        r.points.forEach(function (pt, ix) {
-            var key = pt.join(',');
-            if (!self._pointMap[key]) self._pointMap[key] = [];
-            self._pointMap[key].push([ r, ix ]);
-        });
-        this.regions.push(r);
+        this.regions.push(Region(pts, function (pt) {
+            return self.test(pt);
+        }));
     }
     
     this.max = -Infinity;
@@ -50,33 +42,26 @@ function Search (range, opts, fn) {
 }
 
 Search.prototype.next = function () {
-    if (this.iteration === 0) {
-        var value = this.fn(this.center);
-        this.setPoint(this.center, value);
+    if (this._buffered.length > 0) {
         this.iteration ++;
-        return { point: this.center, value: value };
-    }
-    if (this.iteration <= this.corners.length) {
-        var ix = this.iteration - 1;
-        var pt = this.corners[ix];
-        var r = this.regions[ix];
-        var value = this.fn(pt);
-        this.setPoint(pt, value);
-        this.iteration ++;
-        return { point: pt, value: value };
-    }
-    if (this.iteration <= this.corners.length + this.regions.length) {
-        var ix = this.iteration - this.corners.length - 1;
-        var r = this.regions[ix];
-        var value = this.fn(r.center);
-        this.setPoint(r.center, value);
-        r.set(value);
-        this.emit('region', r);
-        this.iteration ++;
-        return { point: r.center, value: value };
+        return this._buffered.shift();
     }
     
-    if (this._pending.length === 0) {
+    if (this.iteration === 0) {
+        this.test(this.center);
+    }
+    else if (this.iteration <= this.corners.length) {
+        var ix = this.iteration - 1;
+        var pt = this.corners[ix];
+        this.test(pt);
+    }
+    else if (this.iteration <= this.corners.length + this.regions.length) {
+        var ix = this.iteration - this.corners.length - 1;
+        var r = this.regions[ix];
+        this.test(r.center);
+        this.emit('region', r);
+    }
+    else {
         var best = this.best();
         var subRegions = best.region.divide();
         
@@ -85,29 +70,10 @@ Search.prototype.next = function () {
         this.regions.splice.apply(this.regions, xs);
         
         for (var i = 0; i < subRegions.length; i++) {
-            var r = subRegions[i];
-            this.emit('region', r);
-            for (var j = 0; j < r.points.length; j++) {
-                var pt = r.points[j];
-                var pkey = pt.join(',');
-                if (!this._pointMap[pkey]) this._pointMap[pkey] = [];
-                var pmk = this._pointMap[pkey];
-                if (r.values[j] === undefined && pmk[0]) {
-                    r.values[j] = pmk[1][0].values[pmk[1][1]];
-                }
-            }
-            var ckey = r.center.join(',');
-            if (!this._pointMap[ckey]) this._pointMap[ckey] = [];
-            this._pending.push(r);
+            this.emit('region', subRegions[i]);
         }
     }
-    
-    var p = this._pending.shift();
-    var value = this.fn(p.center);
-    this.setPoint(p.center, value);
-    p.set(value);
-    this.iteration ++;
-    return { point: p.center, value: value };
+    return this.next();
 };
 
 Search.prototype.best = function () {
@@ -127,16 +93,19 @@ Search.prototype.best = function () {
     return { region: max, index: index };
 };
 
-Search.prototype.setPoint = function (pt, value) {
+Search.prototype.test = function (pt) {
+    var key = pt.join(',');
+    if (this._pointMap[key] !== undefined) return this._pointMap[key];
+    
+    var value = this.fn(pt);
+    this._pointMap[key] = value;
+    
     this.emit('test', pt, value);
     if (value > this.max) {
         this.max = value;
         this.emit('max', pt, value);
     }
     
-    var regions = this._pointMap[pt.join(',')];
-    for (var i = 0; i < regions.length; i++) {
-        var r = regions[i][0];
-        r.values[regions[i][1]] = value;
-    }
+    this._buffered.push({ point: pt, value: value });
+    return value;
 };
