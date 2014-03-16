@@ -92,7 +92,7 @@ Search.prototype.best = function () {
             score = v;
         }
     }
-    console.log('BEST', index, score);
+    this.emit('best', r, score);
     return { region: max, index: index };
 };
 
