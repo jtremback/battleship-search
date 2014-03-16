@@ -20,6 +20,7 @@ function Search (range, opts, fn) {
     this.range = range;
     this.corners = expandBounds(range);
     this.fn = fn;
+    this.center = range.map(mean);
     
     this.regions = [];
     this._pointMap = {};
@@ -38,30 +39,18 @@ Search.prototype.next = function () {
     }
     
     if (this.iteration === 0) {
-        var center = this.range.map(mean);
-        this.test(center);
-        
-        for (var i = 0; i < this.corners.length; i++) {
-            var pts = [ center ];
-            for (var j = 0; j < this.range.length; j++) {
-                pts.push(this.corners[(i+j) % this.corners.length]);
-            }
-            var r = Region(pts, function (pt) {
-                return self.test(pt);
-            });
-            this.regions.push(r);
-            this.emit('region', r);
+        this.test(this.center);
+    }
+    else if (this.regions.length < 4) {
+        var i = (this.iteration - 1) / 2;
+        var pts = [ this.center ];
+        for (var j = 0; j < this.range.length; j++) {
+            pts.push(this.corners[(i+j) % this.corners.length]);
         }
-    }
-    else if (this.iteration <= this.corners.length) {
-        var ix = this.iteration - 1;
-        var pt = this.corners[ix];
-        this.test(pt);
-    }
-    else if (this.iteration <= this.corners.length + this.regions.length) {
-        var ix = this.iteration - this.corners.length - 1;
-        var r = this.regions[ix];
-        this.test(r.center);
+        var r = Region(pts, function (pt) {
+            return self.test(pt);
+        });
+        this.regions.push(r);
         this.emit('region', r);
     }
     else {
