@@ -29,6 +29,6 @@ q.on('max', function (pt, x) {
 var next = document.querySelector('#next');
 next.addEventListener('click', function () {
     var t = q.next();
-    console.log('TEST', t.point, t.value);
+    //console.log('TEST', t.point, t.value);
     viewer.plot(t.point);
 });
