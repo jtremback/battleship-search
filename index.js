@@ -112,11 +112,11 @@ Search.prototype.next = function () {
 
 Search.prototype.best = function () {
     var max = this.regions[0];
-    var score = max.getScore(this);
+    var score = max.getScore(this.regions, this.max);
     var index = 0;
     for (var i = 1; i < this.regions.length; i++) {
         var r = this.regions[i];
-        var v = r.getScore(this);
+        var v = r.getScore(this.regions, this.max);
         if (v > score) {
             max = r;
             index = i;
