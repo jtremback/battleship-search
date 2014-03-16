@@ -23,8 +23,7 @@ q.on('divide', function (r) {
 });
 
 q.on('max', function (pt, x) {
-    //console.log('MAX', x);
-    maxLabel.textContent = x;
+    maxLabel.textContent = x + ' on iteration ' + q.iteration;
 });
 
 var next = document.querySelector('#next');
