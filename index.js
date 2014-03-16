@@ -24,7 +24,7 @@ function Search (range, opts, fn) {
     
     this.regions = [];
     this._pointMap = {};
-    this._buffered = [];
+    this._pending = [];
     
     this.max = -Infinity;
     this.iteration = 0;
@@ -33,13 +33,33 @@ function Search (range, opts, fn) {
 Search.prototype.next = function () {
     var self = this;
     
-    if (this._buffered.length > 0) {
+    if (this._pending.length > 0) {
+        var previously;
+        var c = this._pending[0].next(function (pt) {
+            previously = self.has(pt);
+            return self.test(pt);
+        });
+        if (previously) return this.next();
+        if (c === null) {
+            this._pending.shift();
+            return this.next();
+        }
+        
         this.iteration ++;
-        return this._buffered.shift();
+        return c;
     }
     
     if (this.iteration === 0) {
-        this.test(this.center);
+        var first = true;
+        this._pending.push({
+            next: function () {
+                if (!first) return null;
+                first = false;
+                
+                var value = self.test(self.center);
+                return { point: self.center, value: value };
+            }
+        });
     }
     else if (this.regions.length < 4) {
         var i = (this.iteration - 1) / 2;
@@ -47,9 +67,8 @@ Search.prototype.next = function () {
         for (var j = 0; j < this.range.length; j++) {
             pts.push(this.corners[(i+j) % this.corners.length]);
         }
-        var r = Region(pts, function (pt) {
-            return self.test(pt);
-        });
+        var r = Region(pts);
+        this._pending.push(r);
         this.regions.push(r);
         this.emit('region', r);
     }
@@ -62,7 +81,9 @@ Search.prototype.next = function () {
         this.regions.splice.apply(this.regions, xs);
         
         for (var i = 0; i < subRegions.length; i++) {
-            this.emit('region', subRegions[i]);
+            var r = subRegions[i];
+            this._pending.push(r);
+            this.emit('region', r);
         }
     }
     return this.next();
@@ -85,6 +106,11 @@ Search.prototype.best = function () {
     return { region: max, index: index };
 };
 
+Search.prototype.has = function (pt) {
+    var key = pt.join(',');
+    return this._pointMap[key] !== undefined;
+};
+
 Search.prototype.test = function (pt) {
     var key = pt.join(',');
     if (this._pointMap[key] !== undefined) return this._pointMap[key];
@@ -97,7 +123,5 @@ Search.prototype.test = function (pt) {
         this.max = value;
         this.emit('max', pt, value);
     }
-    
-    this._buffered.push({ point: pt, value: value });
     return value;
 };
