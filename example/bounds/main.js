@@ -19,17 +19,17 @@ q.on('region', function (r) {
 
 q.on('divide', function (r) {
     var key = r.points.join(' ');
-    //shapes[key].parentNode.removeChild(shapes[key]);
+    shapes[key].parentNode.removeChild(shapes[key]);
 });
 
 q.on('max', function (pt, x) {
-    console.log('MAX', x);
+    //console.log('MAX', x);
     maxLabel.textContent = x;
 });
 
 var next = document.querySelector('#next');
 next.addEventListener('click', function () {
     var t = q.next();
-    console.log('TEST', t.point, t.value);
+    //console.log('TEST', t.point, t.value);
     viewer.plot(t.point);
 });

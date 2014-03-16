@@ -4,7 +4,8 @@
   "description": "maximize an n-dimensional landscape using the battleship search algorithm",
   "main": "index.js",
   "dependencies": {
-    "gray-code": "0.0.0",
+    "gray-code": "~0.0.0",
+    "is-triangle": "~0.0.0",
     "inherits": "~2.0.0"
   },
   "devDependencies": {
