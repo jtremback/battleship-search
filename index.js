@@ -32,7 +32,7 @@ function Search (range, opts, fn) {
         for (var j = 0; j < this.range.length; j++) {
             pts.push(this.corners[(i+j) % this.corners.length]);
         }
-        var r = Region(pts, [], this)
+        var r = Region(pts, [])
         
         var ckey = r.center.join(',');
         if (!this._pointMap[ckey]) this._pointMap[ckey] = [];
@@ -70,7 +70,7 @@ Search.prototype.next = function () {
         var r = this.regions[ix];
         var value = this.fn(r.center);
         this.setPoint(r.center, value);
-        r.setValue(value);
+        r.set(value);
         this.emit('region', r);
         this.iteration ++;
         return { point: r.center, value: value };
@@ -105,25 +105,25 @@ Search.prototype.next = function () {
     var p = this._pending.shift();
     var value = this.fn(p.center);
     this.setPoint(p.center, value);
-    p.setValue(value);
+    p.set(value);
     this.iteration ++;
     return { point: p.center, value: value };
 };
 
 Search.prototype.best = function () {
-    for (var i = 0; i < this.regions.length; i++) {
-        this.regions[i].recompute();
-    }
-    
     var max = this.regions[0];
+    var score = max.getScore(this);
     var index = 0;
-    for (var i = 0; i < this.regions.length; i++) {
+    for (var i = 1; i < this.regions.length; i++) {
         var r = this.regions[i];
-        if (r.value > max.value) {
+        var v = r.getScore(this);
+        if (v > score) {
             max = r;
             index = i;
+            score = v;
         }
     }
+    console.log('BEST', index, score);
     return { region: max, index: index };
 };
 

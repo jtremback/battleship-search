@@ -19,7 +19,7 @@ q.on('region', function (r) {
 
 q.on('divide', function (r) {
     var key = r.points.join(' ');
-    shapes[key].parentNode.removeChild(shapes[key]);
+    //shapes[key].parentNode.removeChild(shapes[key]);
 });
 
 q.on('max', function (pt, x) {
