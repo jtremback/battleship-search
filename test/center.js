@@ -11,7 +11,7 @@ test('circumscribed center', function (t) {
         [ -5, -5, -5, 5 ],
     ]);
     console.log(pt4);
-    t.ok(pt4, '4d');
+    t.equal(pt4.length, 4);
     
     t.end();
 });
