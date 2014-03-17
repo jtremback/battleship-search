@@ -64,7 +64,7 @@ Search.prototype.next = function () {
     else if ((this.iteration - 1) / 2 < this.corners.length) {
         var i = (this.iteration - 1) / 2;
         var pts = [ this.center ];
-        for (var j = 0; j < this.range.length; j++) {
+        for (var j = 0; j < 2; j++) {
             pts.push(this.corners[(i+j) % this.corners.length]);
         }
         var r = Region(pts);
