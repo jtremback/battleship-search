@@ -34,7 +34,7 @@ Search.prototype.next = function () {
     var self = this;
     
     if (this._pending.length > 0) {
-        var previously;
+        var previously = false;
         var c = this._pending[0].next(function (pt) {
             previously = self.has(pt);
             return self.test(pt);
@@ -52,16 +52,16 @@ Search.prototype.next = function () {
     if (this.iteration === 0) {
         var first = true;
         this._pending.push({
-            next: function () {
+            next: function (fn) {
                 if (!first) return null;
                 first = false;
                 
-                var value = self.test(self.center);
+                var value = fn(self.center);
                 return { point: self.center, value: value };
             }
         });
     }
-    else if (this.regions.length < 4) {
+    else if ((this.iteration - 1) / 2 < this.corners.length) {
         var i = (this.iteration - 1) / 2;
         var pts = [ this.center ];
         for (var j = 0; j < this.range.length; j++) {
