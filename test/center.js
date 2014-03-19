@@ -7,7 +7,7 @@ test('circumscribed center', function (t) {
     
     var pt4 = center([
         [ 0, 0, 0, 0 ],
-        [ -5, -5, -5, -5 ],
+        [ -5, -5, -5, 0 ],
         [ -5, -5, -5, 5 ],
     ]);
     console.log(pt4);

@@ -14,8 +14,6 @@ test('1-dimensional', function (t) {
         );
     });
     
-    t.on('end', function () { q.stop() });
-    
     q.on('max', function (pt, x) {
         if (results.length === 13) {
             t.pass('got enough maximum results');
@@ -24,5 +22,5 @@ test('1-dimensional', function (t) {
         results.push([ pt, x ]);
     });
     
-    q.start();
+    for (var i = 0; i < 20; i++) q.next();
 });
