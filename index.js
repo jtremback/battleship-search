@@ -1,6 +1,7 @@
 var expandBounds = require('./lib/expand_bounds.js');
 var Region = require('./lib/region.js');
 var mean = require('./lib/mean.js');
+var dist = require('./lib/dist.js');
 
 var inherits = require('inherits');
 var EventEmitter = require('events').EventEmitter;
@@ -23,6 +24,11 @@ function Search (range, opts, fn) {
     this.center = range.map(mean);
     
     this.regions = [];
+    
+    this.k = range.map(function () { return 0 });
+    this.smooth = range.map(function () { return 1 });
+    this.tansum = range.map(function () { return 1 });
+    
     this._pointMap = {};
     this._pending = [];
     
@@ -118,10 +124,48 @@ Search.prototype.test = function (pt) {
     var value = this.fn(pt);
     this._pointMap[key] = value;
     
+    var sm = this._smooth(pt, value);
+    this.regions.forEach(function (r) {
+        r.setSmooth(sm);
+    });
+    
     this.emit('test', pt, value);
     if (value > this.max) {
         this.max = value;
         this.emit('max', pt, value);
     }
     return value;
+};
+
+Search.prototype._smooth = function (pt, value) {
+    var pcoords = pt.concat(value);
+    var epsilon = [];
+    var ptKeys = Object.keys(this._pointMap);
+    var key = pt.join(',');
+    if (ptKeys.length < 2) return this.smooth;
+    
+    for (var i = 0; i < this.range.length; i++) {
+        epsilon[i] = 0;
+        var csum = 0;
+        
+        for (var j = 0; j < ptKeys.length; j++) {
+            if (key === ptKeys[j]) continue;
+            var otherPt = ptKeys[j].split(',');
+            var otherValue = this._pointMap[ptKeys[j]];
+            
+            var projMag = Math.sqrt(
+                Math.pow(otherPt[i] - pt[i], 2)
+                + Math.pow(otherValue - value, 2)
+            );
+            var c = projMag / dist(pt, ptKeys[j].split(',').map(parseFloat));
+            epsilon[i] += c;
+            csum += Math.atan2(otherValue - value, otherPt[i] - pt[i]) * c;
+        }
+        this.tansum[i] = (this.k[i] / (this.k[i] + epsilon[i])) * this.tansum[i]
+            + csum / (this.k[i] + epsilon[i])
+        ;
+        this.k[i] += epsilon[i];
+        this.smooth[i] = Math.tan(this.tansum[i]);
+    }
+    return this.smooth;
 };
