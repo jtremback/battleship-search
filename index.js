@@ -17,6 +17,9 @@ function Search (range, opts, fn) {
         opts = {};
     }
     if (!opts) opts = {};
+    if (range.length < 2) {
+        throw new Error('dimensionality must be >= 2');
+    }
     
     this.range = range;
     this.corners = expandBounds(range);
