@@ -1,4 +1,4 @@
-var hillclimb = require('./hillclimb/index.js');
+var anneal = require('./anneal/index.js');
 var results = [];
 
 var domain = [ [ 0, 5 ], [ 0, 5 ] ];
@@ -20,8 +20,9 @@ process.on('exit', function () {
 });
 
 while (true) {
-    hillclimb({
+    anneal({
         domain: domain,
+        temperature: 100000,
         costf: function (pt) {
             var value = cost(pt);
             if (value > max) {
