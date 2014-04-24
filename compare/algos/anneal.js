@@ -1,43 +1,12 @@
 var anneal = require('./anneal/index.js');
 var results = [];
 
-var domain = [ [ 0, 5 ], [ 0, 5 ] ];
-
-function cost (pt) {
-    var x = pt[0], y = pt[1];
-    return Math.sin(5 * x + 3) - Math.cos(x)
-        + Math.sin(3 * y - 4) - 1 / 5 * Math.cos(x * y + 3 * y)
-        + 1/4 * Math.sin(3 * x - 1) - 2 * Math.cos(x)
-    ;
-}
-
-var max = Number.MIN_VALUE;
-var index = 0;
-var times = parseInt(process.argv[2], 10);
-
-process.on('exit', function () {
-    process.stdout.write(']');
-});
-
-while (true) {
+module.exports = function (domain, cost) {
     anneal({
         domain: domain,
         temperature: 100000,
         costf: function (pt) {
-            var value = cost(pt);
-            if (value > max) {
-                max = value;
-                
-                if (index !== 0) process.stdout.write(',');
-                console.log(JSON.stringify({
-                    index: index,
-                    value: value,
-                    point: pt
-                }));
-            }
-            index ++;
-            if (index > times) process.exit();
-            return -value;
+            return -cost(pt);
         }
     });
-}
+};
