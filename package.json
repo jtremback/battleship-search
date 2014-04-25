@@ -1,6 +1,6 @@
 {
   "name": "battleship-search",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "description": "maximize an n-dimensional landscape using the battleship search algorithm",
   "main": "index.js",
   "dependencies": {
