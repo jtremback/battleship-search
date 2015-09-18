@@ -139,4 +139,4 @@ npm install battleship-search
 
 # license
 
-MIT
+AGPL
